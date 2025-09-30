@@ -188,11 +188,14 @@ const Login: React.FC = () => {
 
       <div className="z-10">
         <SignIn 
-          routing="path" 
-          path="/sign-in"
-          signUpUrl="/sign-in"
           afterSignInUrl="/"
           afterSignUpUrl="/"
+          appearance={{
+            elements: {
+              rootBox: "mx-auto",
+              card: "bg-card/95 backdrop-blur-md shadow-xl"
+            }
+          }}
         />
       </div>
     </div>

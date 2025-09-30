@@ -52,11 +52,18 @@ const App = () => (
 
             {/* Sign-in route */}
             <Route
-              path="/sign-in"
+              path="/sign-in/*"
               element={
-                <div className="min-h-screen flex items-center justify-center bg-background">
-                  <Login />
-                </div>
+                <>
+                  <SignedOut>
+                    <div className="min-h-screen flex items-center justify-center bg-background">
+                      <Login />
+                    </div>
+                  </SignedOut>
+                  <SignedIn>
+                    <Navigate to="/" replace />
+                  </SignedIn>
+                </>
               }
             />
 
