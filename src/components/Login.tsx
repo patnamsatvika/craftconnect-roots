@@ -23,8 +23,8 @@ const Login: React.FC = () => {
       // Check if user already has a role (check both unsafe and public metadata)
       const existingRole = (user.unsafeMetadata?.role || user.publicMetadata?.role) as UserRole;
       if (existingRole) {
-        // Redirect to appropriate dashboard
-        navigate(`/${existingRole}`);
+        // Role exists, redirect to home (which will show RoleBasedApp)
+        navigate('/');
       } else {
         // Show role selection
         setShowRoleSelection(true);
@@ -48,8 +48,8 @@ const Login: React.FC = () => {
         description: `Welcome to CraftConnect as ${selectedRole}`,
       });
 
-      // Redirect to appropriate dashboard
-      navigate(`/${selectedRole}`);
+      // Redirect to home (which will show RoleBasedApp with navbar)
+      navigate('/');
     } catch (error) {
       toast({
         title: "Error",

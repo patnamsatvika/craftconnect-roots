@@ -7,20 +7,7 @@ import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Login from "./components/Login";
 import NotFound from "./pages/NotFound";
-import CustomerDashboard from "./components/customer/CustomerDashboard";
-import ProductCatalog from "./components/customer/ProductCatalog";
-import ShoppingCart from "./components/customer/ShoppingCart";
-import CustomerProfile from "./components/customer/CustomerProfile";
-import ArtisanDashboard from "./components/artisan/ArtisanDashboard";
-import MyProducts from "./components/artisan/MyProducts";
-import AddProduct from "./components/artisan/AddProduct";
-import OrderManagement from "./components/artisan/OrderManagement";
-import ArtisanProfile from "./components/artisan/ArtisanProfile";
-import AdminDashboard from "./components/admin/AdminDashboard";
-import UserManagement from "./components/admin/UserManagement";
-import ProductManagement from "./components/admin/ProductManagement";
-import AdminOrderManagement from "./components/admin/AdminOrderManagement";
-import AdminSettings from "./components/admin/AdminSettings";
+import RoleBasedApp from "./components/RoleBasedApp";
 
 const queryClient = new QueryClient();
 
@@ -35,13 +22,13 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
           <Routes>
-            {/* Root route - role selection after sign-in */}
+            {/* Main route - show role-based app for authenticated users */}
             <Route
               path="/"
               element={
                 <>
                   <SignedIn>
-                    <Login />
+                    <RoleBasedApp />
                   </SignedIn>
                   <SignedOut>
                     <Navigate to="/sign-in" replace />
@@ -64,124 +51,6 @@ const App = () => (
                     <Navigate to="/" replace />
                   </SignedIn>
                 </>
-              }
-            />
-
-            {/* Customer routes */}
-            <Route
-              path="/customer"
-              element={
-                <SignedIn>
-                  <CustomerDashboard />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/customer/products"
-              element={
-                <SignedIn>
-                  <ProductCatalog />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/customer/cart"
-              element={
-                <SignedIn>
-                  <ShoppingCart />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/customer/profile"
-              element={
-                <SignedIn>
-                  <CustomerProfile />
-                </SignedIn>
-              }
-            />
-
-            {/* Artisan routes */}
-            <Route
-              path="/artisan"
-              element={
-                <SignedIn>
-                  <ArtisanDashboard onViewChange={() => {}} />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/artisan/products"
-              element={
-                <SignedIn>
-                  <MyProducts />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/artisan/add-product"
-              element={
-                <SignedIn>
-                  <AddProduct />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/artisan/orders"
-              element={
-                <SignedIn>
-                  <OrderManagement />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/artisan/profile"
-              element={
-                <SignedIn>
-                  <ArtisanProfile />
-                </SignedIn>
-              }
-            />
-
-            {/* Admin routes */}
-            <Route
-              path="/admin"
-              element={
-                <SignedIn>
-                  <AdminDashboard onViewChange={() => {}} />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <SignedIn>
-                  <UserManagement />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/admin/products"
-              element={
-                <SignedIn>
-                  <ProductManagement />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/admin/orders"
-              element={
-                <SignedIn>
-                  <AdminOrderManagement />
-                </SignedIn>
-              }
-            />
-            <Route
-              path="/admin/settings"
-              element={
-                <SignedIn>
-                  <AdminSettings />
-                </SignedIn>
               }
             />
 
