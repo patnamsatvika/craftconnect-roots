@@ -23,11 +23,9 @@ import AdminSettings from "./components/admin/AdminSettings";
 
 const queryClient = new QueryClient();
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing Clerk Publishable Key");
-}
+// Replace this with your actual Clerk Publishable Key (starts with pk_test_ or pk_live_)
+// Get it from: https://dashboard.clerk.com/
+const PUBLISHABLE_KEY = "YOUR_CLERK_PUBLISHABLE_KEY_HERE";
 
 const App = () => (
   <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
