@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import { User, UserRole, LoginForm, AuthContextType } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,40 +17,43 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const { user: clerkUser, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!isLoaded);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setIsLoading(false);
+      if (clerkUser) {
+        // Get role from user metadata or default to customer
+        const role = (clerkUser.publicMetadata?.role as UserRole) || 'customer';
+        
+        setUser({
+          id: clerkUser.id,
+          email: clerkUser.emailAddresses[0]?.emailAddress || '',
+          name: clerkUser.fullName || clerkUser.firstName || 'User',
+          role: role,
+          avatar: clerkUser.imageUrl || getAvatarByRole(role),
+          createdAt: new Date(clerkUser.createdAt || Date.now()),
+        });
+      } else {
+        setUser(null);
+      }
+    }
+  }, [clerkUser, isLoaded]);
 
   const login = async (credentials: LoginForm) => {
     setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock user creation based on role
-    const mockUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      email: credentials.email,
-      name: getRoleDisplayName(credentials.role),
-      role: credentials.role,
-      avatar: getAvatarByRole(credentials.role),
-      createdAt: new Date(),
-    };
-    
-    setUser(mockUser);
+    // Store role in localStorage for role selection page
+    localStorage.setItem('selectedRole', credentials.role);
     setIsLoading(false);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await signOut();
+    localStorage.removeItem('selectedRole');
     setUser(null);
-  };
-
-  const getRoleDisplayName = (role: UserRole): string => {
-    switch (role) {
-      case 'customer': return 'Craft Enthusiast';
-      case 'artisan': return 'Master Artisan';
-      case 'admin': return 'Platform Admin';
-      default: return 'User';
-    }
   };
 
   const getAvatarByRole = (role: UserRole): string => {

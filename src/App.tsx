@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Login from "./components/Login";
 import NotFound from "./pages/NotFound";
 import CustomerDashboard from "./components/customer/CustomerDashboard";
@@ -28,10 +29,11 @@ const PUBLISHABLE_KEY = "pk_test_ZHluYW1pYy1lc2NhcmdvdC04MS5jbGVyay5hY2NvdW50cy5
 const App = () => (
   <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             {/* Root route - role selection after sign-in */}
             <Route
@@ -181,6 +183,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </ClerkProvider>
 );
