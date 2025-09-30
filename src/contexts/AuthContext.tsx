@@ -26,17 +26,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (isLoaded) {
       setIsLoading(false);
       if (clerkUser) {
-        // Get role from user metadata or default to customer
-        const role = (clerkUser.publicMetadata?.role as UserRole) || 'customer';
+        // Get role from user metadata (check both unsafe and public metadata)
+        const role = (clerkUser.unsafeMetadata?.role || clerkUser.publicMetadata?.role) as UserRole;
         
-        setUser({
-          id: clerkUser.id,
-          email: clerkUser.emailAddresses[0]?.emailAddress || '',
-          name: clerkUser.fullName || clerkUser.firstName || 'User',
-          role: role,
-          avatar: clerkUser.imageUrl || getAvatarByRole(role),
-          createdAt: new Date(clerkUser.createdAt || Date.now()),
-        });
+        if (role) {
+          setUser({
+            id: clerkUser.id,
+            email: clerkUser.emailAddresses[0]?.emailAddress || '',
+            name: clerkUser.fullName || clerkUser.firstName || 'User',
+            role: role,
+            avatar: clerkUser.imageUrl || getAvatarByRole(role),
+            createdAt: new Date(clerkUser.createdAt || Date.now()),
+          });
+        } else {
+          // User authenticated but no role selected yet
+          setUser(null);
+        }
       } else {
         setUser(null);
       }
@@ -44,9 +49,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [clerkUser, isLoaded]);
 
   const login = async (credentials: LoginForm) => {
+    // Not used with Clerk, but kept for compatibility
     setIsLoading(true);
-    // Store role in localStorage for role selection page
-    localStorage.setItem('selectedRole', credentials.role);
     setIsLoading(false);
   };
 

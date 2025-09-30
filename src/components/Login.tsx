@@ -1,26 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUser, SignIn } from '@clerk/clerk-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useAuth } from '@/contexts/AuthContext';
-import { UserRole, LoginForm } from '@/types/auth';
+import { Label } from '@/components/ui/label';
+import { UserRole } from '@/types/auth';
 import { Loader2, Palette, Hammer, Shield } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import heroArtisan from '@/assets/hero-artisan.jpg';
 
 const Login: React.FC = () => {
-  const { login, isLoading } = useAuth();
-  const [formData, setFormData] = useState<LoginForm>({
-    email: '',
-    password: '',
-    role: 'customer',
-  });
+  const { user, isLoaded } = useUser();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole>('customer');
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.email && formData.password) {
-      await login(formData);
+  useEffect(() => {
+    if (isLoaded && user) {
+      // Check if user already has a role (check both unsafe and public metadata)
+      const existingRole = (user.unsafeMetadata?.role || user.publicMetadata?.role) as UserRole;
+      if (existingRole) {
+        // Redirect to appropriate dashboard
+        navigate(`/${existingRole}`);
+      } else {
+        // Show role selection
+        setShowRoleSelection(true);
+      }
+    }
+  }, [isLoaded, user, navigate]);
+
+  const handleRoleSubmit = async () => {
+    if (!user) return;
+    
+    setIsUpdating(true);
+    try {
+      await user.update({
+        unsafeMetadata: {
+          role: selectedRole
+        }
+      });
+
+      toast({
+        title: "Role selected successfully!",
+        description: `Welcome to CraftConnect as ${selectedRole}`,
+      });
+
+      // Redirect to appropriate dashboard
+      navigate(`/${selectedRole}`);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update role. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -48,42 +85,37 @@ const Login: React.FC = () => {
     },
   ];
 
-  return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url(${heroArtisan})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-craft-terracotta/80 via-craft-mustard/60 to-craft-deep-red/80 backdrop-blur-sm"></div>
-        <div className="absolute inset-0 texture-overlay"></div>
-      </div>
+  // Show role selection if authenticated but no role
+  if (showRoleSelection) {
+    return (
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: `url(${heroArtisan})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-craft-terracotta/80 via-craft-mustard/60 to-craft-deep-red/80 backdrop-blur-sm"></div>
+          <div className="absolute inset-0 texture-overlay"></div>
+        </div>
 
-      {/* Login Form */}
-      <Card className="w-full max-w-md z-10 craft-card bg-card/95 backdrop-blur-md animate-fade-in-up">
-        <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-3xl font-serif text-craft-terracotta">
-            CraftConnect
-          </CardTitle>
-          <CardDescription className="text-base">
-            Welcome to the Village Marketplace
-          </CardDescription>
-        </CardHeader>
+        <Card className="w-full max-w-md z-10 craft-card bg-card/95 backdrop-blur-md animate-fade-in-up">
+          <CardHeader className="text-center space-y-2">
+            <CardTitle className="text-3xl font-serif text-craft-terracotta">
+              Choose Your Role
+            </CardTitle>
+            <CardDescription className="text-base">
+              Select how you want to use CraftConnect
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Role Selection */}
+          <CardContent className="space-y-6">
             <div className="space-y-4">
-              <Label className="text-sm font-medium">Choose Your Role</Label>
               <RadioGroup
-                value={formData.role}
-                onValueChange={(value: UserRole) =>
-                  setFormData({ ...formData, role: value })
-                }
+                value={selectedRole}
+                onValueChange={(value: UserRole) => setSelectedRole(value)}
                 className="space-y-3"
               >
                 {roleOptions.map((option) => {
@@ -92,7 +124,7 @@ const Login: React.FC = () => {
                     <div
                       key={option.value}
                       className="flex items-center space-x-3 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors cursor-pointer"
-                      onClick={() => setFormData({ ...formData, role: option.value })}
+                      onClick={() => setSelectedRole(option.value)}
                     >
                       <RadioGroupItem
                         value={option.value}
@@ -117,62 +149,52 @@ const Login: React.FC = () => {
               </RadioGroup>
             </div>
 
-            {/* Email Field */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your.email@example.com"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                required
-                className="bg-background/80 border-border/50 focus:border-craft-terracotta"
-              />
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                required
-                className="bg-background/80 border-border/50 focus:border-craft-terracotta"
-              />
-            </div>
-
-            {/* Submit Button */}
             <Button
-              type="submit"
+              onClick={handleRoleSubmit}
               variant="hero"
               size="lg"
               className="w-full"
-              disabled={isLoading || !formData.email || !formData.password}
+              disabled={isUpdating}
             >
-              {isLoading ? (
+              {isUpdating ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Entering the Marketplace...
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Setting up your account...
                 </>
               ) : (
-                'Enter CraftConnect'
+                'Continue to CraftConnect'
               )}
             </Button>
-          </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-          <div className="text-center text-sm text-muted-foreground">
-            <p>New to CraftConnect? Join our community of artisans and craft lovers!</p>
-          </div>
-        </CardContent>
-      </Card>
+  // Show Clerk SignIn component
+  return (
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url(${heroArtisan})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-craft-terracotta/80 via-craft-mustard/60 to-craft-deep-red/80 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 texture-overlay"></div>
+      </div>
+
+      <div className="z-10">
+        <SignIn 
+          routing="path" 
+          path="/sign-in"
+          signUpUrl="/sign-in"
+          afterSignInUrl="/"
+          afterSignUpUrl="/"
+        />
+      </div>
     </div>
   );
 };
